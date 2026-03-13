@@ -91,10 +91,10 @@ const DocumentsPage = () => {
                       </button>
                     </TableCell>
                     <TableCell className="uppercase text-xs font-semibold text-muted-foreground">
-                      {doc.fileType}
+                      {doc.file_type}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {formatDate(doc.createdAt)}
+                      {formatDate(doc.created_at)}
                     </TableCell>
                     <TableCell>
                       <Badge variant={doc.status === "summarized" ? "default" : "secondary"}>

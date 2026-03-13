@@ -103,7 +103,7 @@ const DocumentsPage = () => {
 
         <div className="flex gap-6 items-start">
           {/* Left: Documents table */}
-          <div className={`${showUpload ? "flex-1 min-w-0" : "w-full"} transition-all`}>
+          <div className={`${showUpload ? "flex-1 min-w-0" : "w-full"}`}>
             {isLoading ? (
               <div className="text-center py-20 text-muted-foreground">Loading documents...</div>
             ) : documents.length === 0 ? (

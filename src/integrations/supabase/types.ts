@@ -14,7 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      documents: {
+        Row: {
+          created_at: string
+          file_path: string
+          file_type: string
+          id: string
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          file_type: string
+          id?: string
+          status?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          file_type?: string
+          id?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      summaries: {
+        Row: {
+          document_id: string
+          generated_at: string
+          id: string
+          summary: string
+          summary_type: string
+        }
+        Insert: {
+          document_id: string
+          generated_at?: string
+          id?: string
+          summary: string
+          summary_type?: string
+        }
+        Update: {
+          document_id?: string
+          generated_at?: string
+          id?: string
+          summary?: string
+          summary_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "summaries_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: true
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

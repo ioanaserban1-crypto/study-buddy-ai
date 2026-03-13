@@ -170,7 +170,9 @@ const DocumentDetailPage = () => {
         {/* Summarizing progress */}
         {summarizing && (
           <div className="space-y-2">
-            <Progress value={45} className="h-2" />
+            <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
+              <div className="h-full bg-primary rounded-full animate-pulse w-2/3" style={{ animation: "indeterminate 1.5s ease-in-out infinite" }} />
+            </div>
             <p className="text-sm text-center text-muted-foreground">Summarizing...</p>
           </div>
         )}

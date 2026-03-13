@@ -45,13 +45,11 @@ const DocumentDetailPage = () => {
     mutationFn: () => summarizeDocument(id!, summaryType),
     onMutate: () => setSummarizing(true),
     onSuccess: () => {
-      setTimeout(() => {
-        setSummarizing(false);
-        setShowSummary(true);
-        queryClient.invalidateQueries({ queryKey: ["document", id] });
-        refetchSummary();
-        toast.success("Summary generated!");
-      }, 1500);
+      setSummarizing(false);
+      setShowSummary(true);
+      queryClient.invalidateQueries({ queryKey: ["document", id] });
+      refetchSummary();
+      toast.success("Summary generated!");
     },
     onError: () => {
       setSummarizing(false);

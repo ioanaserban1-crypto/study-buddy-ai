@@ -10,46 +10,11 @@ serve(async (req) => {
 
   try {
     const { documentId, summaryType, title } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const prompt = summaryType === "detailed"
-      ? `Provide a detailed, comprehensive summary of the following document titled "${title}". Include key points, main arguments, and important details.`
-      : `Provide a concise, brief summary of the following document titled "${title}". Focus only on the most important points.`;
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: "You are an academic study assistant. Generate clear, well-structured summaries of study documents. Use proper formatting with paragraphs." },
-          { role: "user", content: prompt },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again later." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required, please add credits." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
-      throw new Error("AI gateway error");
-    }
-
-    const data = await response.json();
-    const summary = data.choices?.[0]?.message?.content || "No summary generated.";
+    // Placeholder summary instead of AI
+    const summary = summaryType === "detailed"
+      ? `This is a detailed placeholder summary for "${title}".\n\nKey Points:\n• The document covers important concepts and methodologies\n• Multiple sections explore different aspects of the topic\n• Examples and case studies are provided throughout\n• The conclusion summarizes the main findings\n\nMain Arguments:\nThe author presents a comprehensive analysis of the subject matter, supported by evidence and logical reasoning. The structure follows a clear progression from introduction to conclusion.\n\nImportant Details:\nVarious supporting details, data points, and references are included to strengthen the central thesis of the document.`
+      : `Brief summary of "${title}":\n\n• Key concepts and main points covered\n• Core arguments presented\n• Essential takeaways for quick reference`;
 
     return new Response(JSON.stringify({ summary }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

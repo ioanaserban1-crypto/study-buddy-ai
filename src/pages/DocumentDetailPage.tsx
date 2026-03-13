@@ -61,11 +61,9 @@ const DocumentDetailPage = () => {
     mutationFn: () => regenerateSummary(id!, summaryType),
     onMutate: () => setSummarizing(true),
     onSuccess: () => {
-      setTimeout(() => {
-        setSummarizing(false);
-        refetchSummary();
-        toast.success("Summary regenerated!");
-      }, 1500);
+      setSummarizing(false);
+      refetchSummary();
+      toast.success("Summary regenerated!");
     },
     onError: () => {
       setSummarizing(false);

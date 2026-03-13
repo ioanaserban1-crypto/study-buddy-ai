@@ -91,7 +91,7 @@ const DocumentsPage = () => {
                       </button>
                     </TableCell>
                     <TableCell className="uppercase text-xs font-semibold text-muted-foreground">
-                      {doc.fileType}
+                      {doc.file_type}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {formatDate(doc.createdAt)}

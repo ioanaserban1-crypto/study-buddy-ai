@@ -94,7 +94,7 @@ const DocumentsPage = () => {
                       {doc.file_type}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {formatDate(doc.createdAt)}
+                      {formatDate(doc.created_at)}
                     </TableCell>
                     <TableCell>
                       <Badge variant={doc.status === "summarized" ? "default" : "secondary"}>

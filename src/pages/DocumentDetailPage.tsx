@@ -136,8 +136,8 @@ const DocumentDetailPage = () => {
         {/* Document info bar */}
         <div className="rounded-xl surface-highlight px-6 py-4 flex flex-wrap items-center gap-4">
           <span className="font-semibold text-primary">{doc.title}</span>
-          <span className="uppercase text-xs font-semibold text-muted-foreground">{doc.fileType}</span>
-          <span className="text-sm text-muted-foreground">{formatDate(doc.createdAt)}</span>
+          <span className="uppercase text-xs font-semibold text-muted-foreground">{doc.file_type}</span>
+          <span className="text-sm text-muted-foreground">{formatDate(doc.created_at)}</span>
           <Badge variant={isSummarized ? "default" : "secondary"}>
             {summarizing ? "Summarizing..." : isSummarized ? "Summarized" : "Pending"}
           </Badge>

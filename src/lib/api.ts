@@ -1,4 +1,7 @@
-import { supabase } from "@/integrations/supabase/client";
+// Base URL for your FastAPI backend.
+// In development: "http://localhost:8000"
+// In production: update to your deployed API URL.
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 export interface Document {
   id: string;
@@ -18,65 +21,65 @@ export interface SummaryResponse {
 
 export type SummaryType = "concise" | "detailed";
 
+async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    ...options,
+  });
+  if (!res.ok) {
+    const errorBody = await res.text();
+    throw new Error(errorBody || `Request failed: ${res.status}`);
+  }
+  return res.json();
+}
+
 // Documents
 export async function fetchDocuments(): Promise<Document[]> {
-  const { data, error } = await supabase
-    .from("documents")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return data;
+  return apiFetch<Document[]>("/api/documents");
 }
 
 export async function fetchDocumentById(id: string): Promise<Document> {
-  const { data, error } = await supabase
-    .from("documents")
-    .select("*")
-    .eq("id", id)
-    .single();
-  if (error) throw error;
-  return data;
+  return apiFetch<Document>(`/api/documents/${id}`);
 }
 
 export async function uploadDocument(title: string, file: File, fileType: string): Promise<{ id: string }> {
-  // 1. Upload file to storage
-  const filePath = `${crypto.randomUUID()}_${file.name}`;
-  const { error: storageError } = await supabase.storage
-    .from("documents")
-    .upload(filePath, file);
-  if (storageError) throw storageError;
+  const formData = new FormData();
+  formData.append("title", title);
+  formData.append("file_type", fileType);
+  formData.append("file", file);
 
-  // 2. Create document record
-  const { data, error } = await supabase
-    .from("documents")
-    .insert({ title, file_type: fileType, file_path: filePath, status: "pending" })
-    .select("id")
-    .single();
-  if (error) throw error;
-  return { id: data.id };
+  const res = await fetch(`${BASE_URL}/api/documents/upload`, {
+    method: "POST",
+    body: formData,
+    // Don't set Content-Type — browser sets it with boundary for multipart
+  });
+  if (!res.ok) {
+    const errorBody = await res.text();
+    throw new Error(errorBody || `Upload failed: ${res.status}`);
+  }
+  return res.json();
 }
 
 export async function deleteDocument(id: string): Promise<void> {
-  // Get file path first
-  const { data: doc } = await supabase.from("documents").select("file_path").eq("id", id).single();
-  if (doc?.file_path) {
-    await supabase.storage.from("documents").remove([doc.file_path]);
-  }
-  const { error } = await supabase.from("documents").delete().eq("id", id);
-  if (error) throw error;
+  await apiFetch(`/api/documents/${id}`, { method: "DELETE" });
 }
 
 export async function downloadDocumentFile(id: string): Promise<void> {
-  const { data: doc } = await supabase.from("documents").select("file_path, title, file_type").eq("id", id).single();
-  if (!doc) throw new Error("Document not found");
+  const res = await fetch(`${BASE_URL}/api/documents/${id}/download`);
+  if (!res.ok) throw new Error("Download failed");
 
-  const { data, error } = await supabase.storage.from("documents").download(doc.file_path);
-  if (error) throw error;
+  const disposition = res.headers.get("Content-Disposition");
+  let filename = "document";
+  if (disposition) {
+    const match = disposition.match(/filename="?(.+?)"?$/);
+    if (match) filename = match[1];
+  }
 
-  const url = URL.createObjectURL(data);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${doc.title}.${doc.file_type}`;
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -85,42 +88,18 @@ export async function downloadDocumentFile(id: string): Promise<void> {
 
 // Summaries
 export async function summarizeDocument(id: string, summaryType: SummaryType): Promise<void> {
-  const doc = await fetchDocumentById(id);
-
-  // Call edge function for AI summary
-  const { data: fnData, error: fnError } = await supabase.functions.invoke("summarize", {
-    body: { documentId: id, summaryType, title: doc.title },
+  await apiFetch(`/api/documents/${id}/summarize`, {
+    method: "POST",
+    body: JSON.stringify({ summary_type: summaryType }),
   });
-  if (fnError) throw fnError;
-
-  // Upsert summary
-  const { error } = await supabase
-    .from("summaries")
-    .upsert({
-      document_id: id,
-      summary: fnData.summary,
-      summary_type: summaryType,
-      generated_at: new Date().toISOString(),
-    }, { onConflict: "document_id" });
-  if (error) throw error;
-
-  // Update document status
-  await supabase.from("documents").update({ status: "summarized" }).eq("id", id);
 }
 
 export async function fetchSummary(id: string): Promise<SummaryResponse | null> {
-  const { data, error } = await supabase
-    .from("summaries")
-    .select("*, documents(title)")
-    .eq("document_id", id)
-    .single();
-  if (error) return null;
-  return {
-    document_id: data.document_id,
-    title: (data.documents as any)?.title || "",
-    summary: data.summary,
-    generated_at: data.generated_at,
-  };
+  try {
+    return await apiFetch<SummaryResponse>(`/api/documents/${id}/summary`);
+  } catch {
+    return null;
+  }
 }
 
 export async function regenerateSummary(id: string, summaryType: SummaryType): Promise<void> {
